@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anvaya — 2D Layered Outfit System (Beige Jacket & Shortened T-Shirt)</title>
+  <style>
+    :root {
+      --bg-page: #f8f6f2;
+      --bg-card: #ffffff;
+      --border-color: #e5e0d8;
+      --text-main: #23201d;
+      --text-muted: #79736b;
+      --accent-color: #2c3e50;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+      max-width: 760px;
+    }
+
+    .badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #eae5dc;
+      color: var(--text-main);
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    p.subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .main-layout {
+      display: flex;
+      gap: 36px;
+      max-width: 1080px;
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+      padding: 32px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    /* Mannequin Stage */
+    .stage-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .stage-wrapper {
+      position: relative;
+      width: 524px;
+      height: 524px;
+      background: radial-gradient(circle at 50% 50%, #ffffff 0%, #edeae3 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    /* Rendering Order & Layer Stack */
+    .layer-img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 524px;
+      height: 524px;
+      pointer-events: none;
+      user-select: none;
+      transition: opacity 0.16s ease-in-out;
+    }
+
+    #layer-base        { z-index: 10; }
+    #layer-bottomwear  { z-index: 20; transform: translateX(2px); }
+    #layer-topwear     { z-index: 30; }
+    #layer-outerwear   { z-index: 40; }
+    #layer-accessories { z-index: 50; }
+
+    .layer-hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .stage-caption {
+      margin-top: 12px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    /* Controls Panel */
+    .controls-column {
+      flex: 1;
+      min-width: 330px;
+      max-width: 460px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .preset-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .preset-btn {
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      background: #f4efe8;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text-main);
+      transition: all 0.15s ease;
+      text-align: left;
+    }
+
+    .preset-btn:hover {
+      background: #eae2d6;
+    }
+
+    .preset-btn.active {
+      background: var(--accent-color);
+      color: #fff;
+      border-color: var(--accent-color);
+    }
+
+    /* Layer Controls */
+    .layer-control-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .layer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: #faf8f5;
+      transition: all 0.15s ease;
+    }
+
+    .layer-row.is-active {
+      background: #ffffff;
+      border-color: #c9bfb0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+
+    .layer-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .layer-name {
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+
+    .layer-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #d8d3cb;
+      transition: .2s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    input:checked + .slider {
+      background-color: #2c3e50;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Specifications Card */
+    .specs-card {
+      background: #faf8f5;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 11.5px;
+      line-height: 1.5;
+    }
+
+    .specs-card h4 {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    .specs-list {
+      list-style: none;
+    }
+
+    .specs-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      border-bottom: 1px dotted #e5e0d8;
+    }
+
+    .specs-list li:last-child {
+      border-bottom: none;
+    }
+
+    .specs-key {
+      color: var(--text-muted);
+    }
+
+    .specs-val {
+      font-family: var(--font-mono);
+      font-weight: 500;
+    }
+
+    footer {
+      margin-top: 28px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">Layered Outfit System &bull; Final Corrections</div>
+    <h1>Anvaya 2D Layered Outfit System</h1>
+    <p class="subtitle">
+      Beige open-front jacket cleanly isolated; T-shirt shortened to waistband without overlap.
+      Chest patch eliminated; footwear independently toggleable.
+    </p>
+  </header>
+
+  <main class="main-layout">
+    <!-- Visual Stage -->
+    <div class="stage-column">
+      <div class="stage-wrapper" id="stage">
+        <!-- Render Order: Base -> Bottomwear -> Topwear -> Outerwear -> Footwear -->
+        <img id="layer-base" class="layer-img" src="/silhouettes/look-01-layered/base-arms-masked.png" alt="Base Mannequin">
+        <img id="layer-bottomwear" class="layer-img" src="/silhouettes/look-01-layered/bottomwear.png" alt="Bottomwear (Khaki Chinos)">
+        <img id="layer-topwear" class="layer-img" src="/silhouettes/look-01-layered/topwear.png" alt="Topwear (Beige Crewneck T-Shirt)">
+        <img id="layer-outerwear" class="layer-img" src="/silhouettes/look-01-layered/outerwear.png" alt="Outerwear (Beige Open Jacket)">
+        <img id="layer-accessories" class="layer-img" src="/silhouettes/look-01-layered/accessories.png" alt="Footwear (White Sneakers)">
+      </div>
+      <div class="stage-caption">Canvas: 524 &times; 524 px &bull; Shared Coordinate System</div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-column">
+      <div>
+        <div class="section-title">Required Validation Scenarios</div>
+        <div class="preset-buttons">
+          <button class="preset-btn" id="preset-test1" onclick="applyTest(1)">1. T-Shirt + Trousers (No Jacket)</button>
+          <button class="preset-btn" id="preset-test2" onclick="applyTest(2)">2. T-Shirt + Trousers + Beige Jacket</button>
+          <button class="preset-btn" id="preset-test3" onclick="applyTest(3)">3. T-Shirt + Trousers + Footwear</button>
+          <button class="preset-btn active" id="preset-test4" onclick="applyTest(4)">4. Complete Outfit (All Layers)</button>
+          <button class="preset-btn" id="preset-test5" onclick="applyTest(5)">5. Base Mannequin Only</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Independent Garment Toggles</div>
+        <div class="layer-control-list">
+
+          <!-- Outerwear -->
+          <div class="layer-row is-active" id="row-outerwear">
+            <div class="layer-info">
+              <span class="layer-name">Outerwear</span>
+              <span class="layer-meta">Beige Open-Front Jacket &bull; Newly attached ref</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-outerwear" checked onchange="toggleLayer('outerwear')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- Topwear -->
+          <div class="layer-row is-active" id="row-topwear">
+            <div class="layer-info">
+              <span class="layer-name">Topwear</span>
+              <span class="layer-meta">Beige T-Shirt &bull; Hem ends at Y=254 (waistband)</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-topwear" checked onchange="toggleLayer('topwear')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- Bottomwear -->
+          <div class="layer-row is-active" id="row-bottomwear">
+            <div class="layer-info">
+              <span class="layer-name">Bottomwear</span>
+              <span class="layer-meta">Khaki Chinos &bull; Waistband starts at Y=255</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-bottomwear" checked onchange="toggleLayer('bottomwear')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- Footwear -->
+          <div class="layer-row is-active" id="row-accessories">
+            <div class="layer-info">
+              <span class="layer-name">Footwear</span>
+              <span class="layer-meta">White Sneakers &bull; Y=[463..499], patch removed</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-accessories" checked onchange="toggleLayer('accessories')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- Base Mannequin -->
+          <div class="layer-row is-active" id="row-base">
+            <div class="layer-info">
+              <span class="layer-name">Base Mannequin</span>
+              <span class="layer-meta">Neutral Full-Body &bull; Permanent base</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-base" checked onchange="toggleLayer('base')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Specs Card -->
+      <div class="specs-card">
+        <h4>Verification Checklist</h4>
+        <ul class="specs-list">
+          <li><span class="specs-key">Jacket Extraction</span><span class="specs-val">Only beige shacket; model/bg cut</span></li>
+          <li><span class="specs-key">Center Opening</span><span class="specs-val">Transparent aperture reveals tee</span></li>
+          <li><span class="specs-key">Decorative Patches</span><span class="specs-val">Arm badge &amp; hem tag removed</span></li>
+          <li><span class="specs-key">T-Shirt Length</span><span class="specs-val">Ends at Y=252; no pants overlap</span></li>
+          <li><span class="specs-key">Accessories</span><span class="specs-val">Footwear only; chest patch gone</span></li>
+          <li><span class="specs-key">Render Order</span><span class="specs-val">Base &rarr; Bottom &rarr; Top &rarr; Outer &rarr; Shoes</span></li>
+        </ul>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    Anvaya Colour Studio &bull; 2D Layered Outfit System Stage 3 &bull; Final Verified Preview
+  </footer>
+
+  <script>
+    const layers = {
+      base: document.getElementById('layer-base'),
+      bottomwear: document.getElementById('layer-bottomwear'),
+      topwear: document.getElementById('layer-topwear'),
+      outerwear: document.getElementById('layer-outerwear'),
+      accessories: document.getElementById('layer-accessories')
+    };
+
+    const toggles = {
+      base: document.getElementById('toggle-base'),
+      bottomwear: document.getElementById('toggle-bottomwear'),
+      topwear: document.getElementById('toggle-topwear'),
+      outerwear: document.getElementById('toggle-outerwear'),
+      accessories: document.getElementById('toggle-accessories')
+    };
+
+    const rows = {
+      base: document.getElementById('row-base'),
+      bottomwear: document.getElementById('row-bottomwear'),
+      topwear: document.getElementById('row-topwear'),
+      outerwear: document.getElementById('row-outerwear'),
+      accessories: document.getElementById('row-accessories')
+    };
+
+    function updateBaseArmMask() {
+      const outerwearActive = toggles.outerwear && toggles.outerwear.checked;
+      layers.base.src = outerwearActive 
+        ? '/silhouettes/look-01-layered/base-arms-masked.png' 
+        : '/silhouettes/look-01-layered/base.png';
+    }
+
+    function toggleLayer(name) {
+      const isChecked = toggles[name].checked;
+      if (isChecked) {
+        layers[name].classList.remove('layer-hidden');
+        rows[name].classList.add('is-active');
+      } else {
+        layers[name].classList.add('layer-hidden');
+        rows[name].classList.remove('is-active');
+      }
+      if (name === 'outerwear') {
+        updateBaseArmMask();
+      }
+      updateActiveTestHighlight();
+    }
+
+    function applyTest(num) {
+      document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById('preset-test' + num);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      if (num === 1) {
+        // 1. T-shirt + trousers, without jacket
+        setAll({ base: true, bottomwear: true, topwear: true, outerwear: false, accessories: false });
+      } else if (num === 2) {
+        // 2. T-shirt + trousers + beige jacket
+        setAll({ base: true, bottomwear: true, topwear: true, outerwear: true, accessories: false });
+      } else if (num === 3) {
+        // 3. T-shirt + trousers + footwear
+        setAll({ base: true, bottomwear: true, topwear: true, outerwear: false, accessories: true });
+      } else if (num === 4) {
+        // 4. Complete outfit
+        setAll({ base: true, bottomwear: true, topwear: true, outerwear: true, accessories: true });
+      } else if (num === 5) {
+        // 5. Base mannequin only
+        setAll({ base: true, bottomwear: false, topwear: false, outerwear: false, accessories: false });
+      }
+    }
+
+    function setAll(config) {
+      for (const key in config) {
+        toggles[key].checked = config[key];
+        toggleLayer(key);
+      }
+    }
+
+    function updateActiveTestHighlight() {
+      const is1 = toggles.base.checked && toggles.bottomwear.checked && toggles.topwear.checked && !toggles.outerwear.checked && !toggles.accessories.checked;
+      const is2 = toggles.base.checked && toggles.bottomwear.checked && toggles.topwear.checked && toggles.outerwear.checked && !toggles.accessories.checked;
+      const is3 = toggles.base.checked && toggles.bottomwear.checked && toggles.topwear.checked && !toggles.outerwear.checked && toggles.accessories.checked;
+      const is4 = toggles.base.checked && toggles.bottomwear.checked && toggles.topwear.checked && toggles.outerwear.checked && toggles.accessories.checked;
+      const is5 = toggles.base.checked && !toggles.bottomwear.checked && !toggles.topwear.checked && !toggles.outerwear.checked && !toggles.accessories.checked;
+
+      document.getElementById('preset-test1').classList.toggle('active', is1);
+      document.getElementById('preset-test2').classList.toggle('active', is2);
+      document.getElementById('preset-test3').classList.toggle('active', is3);
+      document.getElementById('preset-test4').classList.toggle('active', is4);
+      document.getElementById('preset-test5').classList.toggle('active', is5);
+    }
+
+    // Initialize base layer arm masking state
+    updateBaseArmMask();
+  </script>
+</body>
+</html>

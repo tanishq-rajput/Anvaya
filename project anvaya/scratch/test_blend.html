@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { background: #FAF8F3; font-family: sans-serif; display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; }
+.card { background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 260px; }
+.preview { position: relative; width: 240px; height: 240px; background: #F8F5EE; }
+.preview img { position: absolute; top: 0; left: 0; width: 240px; height: 240px; }
+.tint { position: absolute; top: 0; left: 0; width: 240px; height: 240px; }
+h4 { margin: 0 0 5px 0; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div id="container"></div>
+
+<script>
+const modes = [
+  { name: 'Pure multiply (current)', style: 'mix-blend-mode: multiply;' },
+  { name: 'Pure color', style: 'mix-blend-mode: color;' },
+  { name: 'Pure screen', style: 'mix-blend-mode: screen;' },
+  { name: 'Screen 80%', style: 'mix-blend-mode: screen; opacity: 0.8;' },
+  { name: 'Soft-light', style: 'mix-blend-mode: soft-light;' },
+  { name: 'Hard-light', style: 'mix-blend-mode: hard-light;' },
+  { name: 'Color-dodge', style: 'mix-blend-mode: color-dodge;' },
+  { name: 'Lighten', style: 'mix-blend-mode: lighten;' },
+  { 
+    name: 'Dual: Screen 70% + Multiply 70%', 
+    dual: [
+      { style: 'mix-blend-mode: screen; opacity: 0.7;' },
+      { style: 'mix-blend-mode: multiply; opacity: 0.7;' }
+    ]
+  },
+  { 
+    name: 'Dual: Color-dodge 50% + Color 100%', 
+    dual: [
+      { style: 'mix-blend-mode: color-dodge; opacity: 0.5;' },
+      { style: 'mix-blend-mode: color;' }
+    ]
+  },
+  { 
+    name: 'Screen 60% + Color', 
+    dual: [
+      { style: 'mix-blend-mode: screen; opacity: 0.6;' },
+      { style: 'mix-blend-mode: color;' }
+    ]
+  },
+  {
+    name: 'Lifted img (brightness 3) + multiply',
+    imgStyle: 'filter: brightness(3.5) contrast(1.1);',
+    style: 'mix-blend-mode: multiply;'
+  },
+  {
+    name: 'Lifted img (brightness 4.5) + multiply',
+    imgStyle: 'filter: brightness(4.5) contrast(1.1);',
+    style: 'mix-blend-mode: multiply;'
+  }
+];
+
+const testColor = '#C9BAA6'; // Warm Camel
+const maskUrl = '/silhouettes/look-01-layered/mask-bottomwear.png';
+const imgUrl = '/silhouettes/look-01-layered/bottomwear.png';
+
+const container = document.getElementById('container');
+modes.forEach(m => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `<h4>${m.name}</h4><div class="preview">
+    <img src="${imgUrl}" style="${m.imgStyle || ''}">
+    ${m.dual ? m.dual.map(d => `<div class="tint" style="background-color: ${testColor}; -webkit-mask-image: url(${maskUrl}); mask-image: url(${maskUrl}); -webkit-mask-size: contain; mask-size: contain; ${d.style}"></div>`).join('') : `<div class="tint" style="background-color: ${testColor}; -webkit-mask-image: url(${maskUrl}); mask-image: url(${maskUrl}); -webkit-mask-size: contain; mask-size: contain; ${m.style}"></div>`}
+  </div>`;
+  container.appendChild(card);
+});
+</script>
+</body>
+</html>
