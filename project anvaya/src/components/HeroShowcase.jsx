@@ -164,7 +164,7 @@ export default function HeroShowcase() {
         {/* Prominent Editorial Slogan Overlay (Bottom-Left) */}
         <div className="absolute bottom-8 sm:bottom-12 md:bottom-14 lg:bottom-16 left-6 sm:left-10 md:left-14 lg:left-16 z-20 max-w-2xl pointer-events-none select-none">
           <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl lg:text-[4.25rem] font-light text-[#FAF8F3] tracking-tight leading-[1.08] drop-shadow-[0_2px_14px_rgba(0,0,0,0.35)]">
-            Discover your style. <br />
+            Discover your style <br />
             <span className="italic font-normal">Define your expression</span>
           </h1>
         </div>
